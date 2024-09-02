@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<!--[if IE 8]> 				 <html class="no-js lt-ie9" lang="en"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
+
+<head>
+	<meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width" />
+  <title>Gatcha Machine!</title>
+
+  <link rel="stylesheet" href="css/normalize.css" />
+  <link rel="stylesheet" href="css/foundation.css" />
+  <script src="js/vendor/custom.modernizr.js"></script>
+  <script src="js/jquery-latest.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<style>
+/* CSS untuk tombol bulat */
+.round-button {
+        display: inline-block;
+        width: 100px;
+        height: 100px;
+        background-color: #2ecc71; /* Warna latar belakang tombol */
+        color: white;
+        text-align: center;
+        line-height: 100px; /* Vertikal alignment teks */
+        border-radius: 50%; /* Membuat tombol bulat */
+        font-size: 18px;
+        text-decoration: none;
+        margin-top: 20px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.3); /* Menambahkan shadow untuk efek 3D */
+        transition: background-color 0.3s, box-shadow 0.3s;
+    }
+
+    .round-button:hover {
+        background-color: #27ae60; /* Warna latar belakang saat hover */
+        box-shadow: 0 8px 16px rgba(0,0,0,0.3); /* Shadow saat hover */
+    }
+    
+    #gatcha-button-container {
+        display: none; /* Sembunyikan tombol pada awalnya */
+        text-align: center; /* Center align tombol */
+        margin-top: 20px; /* Spasi di atas tombol */
+    }
+#values { position:relative;font-size:400%;text-align:center;margin: 0 auto;z-index:0; }
+.name { overflow:hidden;display:block; }
+#names { display:none;padding:5px; }
+#namesbox { min-height:400px;font-size:32px;color:#333;resize:none;border:1px solid #F39C12; }
+.extra { font-size:16px;margin-top:20px; }
+#result1 { background:#000000;color:#ffffff;padding:20px;z-index:10;margin-top:-150px; }
+body {
+    background: #039a7c url('img/bg-noise-orange.png') no-repeat center center fixed;
+    background-size: cover; /* Menjaga gambar latar belakang tetap di ukuran penuh tanpa memperbesar */
+}
+
+#varnote { font-size:40px;text-align:center;padding:30px; }
+.copyright { font-size:11px;font-family:Tahoma;color:#ffffff; }
+@keyframes moveBackAndForth {
+  0% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(20px);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+.winner-name {
+  display: inline-block;
+  animation: moveBackAndForth 2s ease-in-out infinite; /*ganti durasi animasi disini
+}
+/* Tambahkan CSS untuk gambar di sini */
+#my-image {
+    width: 100%;
+    height: auto;
+    max-width: 600px;
+    opacity: 0.2; /* Transparansi 70% */
+}
+
+        body {
+            background-image: url('img/bg-noise-orange.png');
+            background-size: cover;
+        }
+        
+        .highlight-text {
+    background-color: rgba(39, 39, 39, 0.5); /* Warna hitam dengan transparansi 20% */
+    color: white; /* Warna teks untuk kontras dengan latar belakang */
+    padding: 10px; /* Tambahkan sedikit ruang di sekitar teks */
+    border-radius: 5px; /* Tambahkan sudut yang membulat pada latar belakang */
+}
+</style>
+
+</head>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap">
+<body onload="reset();">
+    
+    <header class="navbar">
+        <div class="navbar-brand">
+            <img src="img/logo.png" alt="Logo" class="logo">
+            <span>BSI Gatcha!</span>
+        </div>
+        <nav class="navbar-menu">
+            <ul class="navbar-links">
+                <li><a href="index.html">Homepage</a></li>
+                <li><a href="#" onclick="namelist();">Daftar Peserta</a></li>
+                <li><a href="#" onclick="showWinners();">Winner List!</a></li>
+            </ul>
+        </nav>
+        <div class="navbar-actions">
+            <button class="icon-button">
+                <i class="icon-sun"></i> <!-- Contoh icon; Anda bisa menggunakan icon dari Font Awesome atau lainnya -->
+            </button>
+            <button class="gatcha-button" onclick="go();">Gatcha!</button>
+        </div>
+    </header>
+    
+
+	<div class="row">
+		<div class="large-12 columns">
+			<h3 class="highlight-text" style="text-align:center;margin-top:30px;" id="headline">
+                Employee Gathering BSI RO 2 Medan
+            </h3>
+            <div id="winners-table-container" style="display:none;">
+                <h3>Daftar Pemenang</h3>
+                <table id="winners-table" border="1" style="width:100%; border-collapse:collapse;">
+                    <thead>
+                        <tr>
+                            <th>Nama</th>
+                            <th>Hadiah</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Data pemenang akan diisi di sini -->
+                    </tbody>
+                </table>
+                <!-- Tambahkan tombol di bawah tabel -->
+                <div id="winners-buttons-container" style="text-align:center; margin-top:20px;">
+                    <button id="reset-winners-button" onclick="resetWinners();">Reset Pemenang</button>
+                    <button id="export-to-excel-button" onclick="exportToExcel();">Export to Excel</button>
+                </div>
+            </div>
+            
+			
+			<div id="varnote"><img src="img/logo.png"><div class="copyright">&copy; Coded by <strong>Emsabiq</strong>, Aug 2024</div></div>
+			
+      <div id="popdown">
+      <div id="names" class="inbox"><textarea name="namesbox" id="namesbox"></textarea></div>
+      </div>
+      
+      <div id="values"></div>
+
+
+		</div>
+	</div>
+
+  <script>
+  document.write('<script src=' +
+  ('__proto__' in {} ? 'js/vendor/zepto' : 'js/vendor/jquery') +
+  '.js><\/script>')
+  </script>
+  
+  <script src="js/foundation.min.js"></script>
+  <script>$(document).foundation();</script>
+  
+  <script>
+    var text;
+    var names = new Array('Barbara McFell', 'Tempo McKeteketly', 'Maonga Irpaae', 'Jose Tunisia', 'Bob Bobson', 'Harold Greenoff', 'Jeff Penn', 'Ewan Freedom', 'Benjamin Turkin', 'Robert Harper', 'Sally Cladwell', 'Gregory Tomson', 'Benita Dano', 'Tameka Chea', 'Fernando Guntrum', 'Cody Devita', 'Margery Moloney', 'Jessie Wagar', 'Jessie Burkhard', 'Cody Lamotte', 'Tabatha Cantley', 'Hugh Fullwood', 'Emilia Janusz', 'Erik Taketa', 'Lenore Laughter', 'Kathrine Palazzo', 'Lonnie Garron', 'Tyrone Shott', 'Gay Duble', 'Pearlie Newberg', 'Clinton Rayl', 'Louisa Strey', 'Saundra Ingenito', 'Fernando Jenkin', 'Maricela Tonkin', 'Allie Borjas', 'Clinton Rickenbacker', 'Cody Golay', 'Jerri Tienda', 'Nita Pippen', 'Alejandra Bonhomme', 'Nelson Eguia', 'Rae Velasques', 'Boyce Edeker', 'Cedrick Culotti', 'Elenora Nagindas', 'Arletta Miran', 'Alica Knudsvig', 'Von Ostroot', 'Tomika Nuesca', 'Felton Pattinson', 'Cristopher Laper', 'Shonna Parrotta', 'Sarina Macurdy', 'Waylon Companie', 'Shon Carratura', 'Jae Kneser', 'Janett Papiernik', 'Lynwood Bellar', 'Jeramy Contopoulos', 'Hong Nederostek', 'Gigi Mccarn', 'Sid Mursko', 'Bielser', 'Jospeh Lustberg', 'Spring Luckinbill', 'Ciera Chionchio', 'Marleen Litchard', 'Eldridge Brynga', 'Leif Dinho', 'Gigi Kornblatt', 'Idell Chagollan', 'Michale Mcclod');
+    
+    function reset() {
+    setTimeout("$('#go').removeAttr('disabled')", 11005);
+    var namesbreak = "";
+
+    // Ambil data dari localStorage jika ada
+    var savedNames = localStorage.getItem('savedNames');
+    if (savedNames) {
+        namesbreak = savedNames.replace(/101/g, '\n').replace(/%20/g, ' ');
+    } else {
+        if (gup('names') != "") {
+            var names = gup('names');
+            namesbreak = names.replace(/101/g, '\n');
+            namesbreak = namesbreak.replace(/%20/g, ' ');
+        } else {
+            for (var i in names) {
+                name = names[i];
+                if (name == "" || typeof(name) == undefined) {} else {
+                    namesbreak = namesbreak + name + "\n";
+                }
+            }
+        }
+    }
+
+    $("#namesbox").val(namesbreak);
+}
+
+    
+    function gup(para)
+    {
+        para = para.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
+        var regexS = "[\\?&]"+para+"=([^&#]*)";
+        var regex = new RegExp( regexS );
+        var results = regex.exec( window.location.href );
+        if( results == null )
+            return "";
+        else
+            return results[1];
+    }
+    
+    function randOrd(){
+        return (Math.round(Math.random())-0.5); 
+    }
+
+    function resetWinners() {
+        if (confirm("Apakah Anda yakin ingin mereset daftar pemenang?")) {
+            localStorage.removeItem("winners"); // Menghapus data pemenang dari localStorage
+            alert("Daftar pemenang telah direset.");
+        }
+    }
+    
+    function save() {
+    $("#varnote").hide();
+    $("#popdown").show();
+    $("#values").hide();
+    $("div").remove("#result1");
+    savenames = $("#namesbox").val();
+    savenames = savenames.replace(/\n\r?/g, '101');
+    $('#headline').fadeOut();
+    $('#headline').text('Daftar nama sudah disimpan dan di-update!').fadeIn();
+    $("#names").show();
+    $('#namesbox').attr('disabled','disabled');
+
+    // Simpan data ke localStorage
+    localStorage.setItem('savedNames', savenames);
+}
+
+
+    function exportToExcel() {
+    let winners = JSON.parse(localStorage.getItem("winners")) || [];
+    if (winners.length === 0) {
+        alert("Tidak ada pemenang yang dapat diekspor.");
+        return;
+    }
+
+    // Format data untuk Excel
+    let data = winners.map(winner => {
+        return {
+            'Nama Pemenang': winner.name,
+            'Hadiah': winner.hadiah
+        };
+    });
+
+    // Buat workbook baru
+    let ws = XLSX.utils.json_to_sheet(data);
+    let wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Pemenang");
+
+    // Ekspor ke file Excel
+    XLSX.writeFile(wb, 'Daftar_Pemenang.xlsx');
+}
+    
+function namelist() {
+    // Sembunyikan elemen-elemen yang tidak relevan dari halaman lain
+    $("#varnote").hide();
+    $("#values").hide();
+    $("#winners-table-container").hide();
+    $('#gatcha-button-container').hide(); // Sembunyikan tombol Gatcha bulat
+    $('body').css({ "overflow-y": "visible" });
+
+    // Tampilkan elemen-elemen yang relevan untuk halaman Daftar Nama
+    $('#headline').text('Name List!'); // Pastikan judul diperbarui
+    $('#headline').show(); // Pastikan judul ditampilkan
+    $('#namesbox').removeAttr('disabled');
+    $("#popdown").show();
+    $("#names").show();
+
+    // Buat container untuk kedua tombol jika belum ada
+    if (!$('#buttons-container').length) {
+        $('#names').append('<div id="buttons-container"></div>');
+    }
+
+    $(document).ready(function() {
+    // Tambahkan tombol "Save & Update" di dalam container jika belum ada
+    if (!$('#save-button').length) {
+        $('#buttons-container').append('<button id="save-button" onclick="save();">Save & Update</button>');
+    }
+
+    // Tambahkan tombol "Hapus Daftar" di dalam container jika belum ada
+    if (!$('#delete-button').length) {
+        $('#buttons-container').append('<button id="delete-button" onclick="deleteList();">Hapus Daftar</button>');
+    }
+});
+
+
+    // Menyimpan setiap perubahan pada daftar nama
+    $("#namesbox").on('input', function () {
+        localStorage.setItem("namelist", $(this).val());
+    });
+}
+
+
+
+
+// Fungsi untuk menghapus daftar nama
+function deleteList() {
+    if (confirm('Apakah Anda yakin ingin menghapus daftar nama ini?')) {
+        $('#namesbox').val(''); // Mengosongkan textarea
+        localStorage.removeItem("namelist"); // Menghapus daftar nama dari localStorage
+    }
+}
+
+
+
+
+function standout(text) {
+    $('#result1').removeClass('name');
+    $('.name').animate({opacity: .25});
+    $('#result1').animate({height: '+=60px'});
+    $('#result1').append('<div class="extra"><a class="small alert button" href="#" onClick="removevictim();">Gakboleh dapat dua kali, hapus dari daftar undian!</a></div>');
+    $('#go').removeAttr('disabled','disabled');
+    $('#list').removeAttr('disabled','disabled');
+    $('#save').removeAttr('disabled','disabled');
+    $('#headline').text('Congratulations!');
+    $('#headline').slideDown();
+    
+    // Tampilkan tombol Gatcha bulat
+    $('#gatcha-button-container').show();
+    
+    let hadiah = prompt("Masukkan hadiah yang dimenangkan:");
+    if (hadiah) {
+        saveWinner(text, hadiah);
+    }
+}
+
+
+
+function go() {
+    $("#varnote").hide();
+    $('body').css({"overflow-y": "hidden"});
+    $('#go').attr('disabled', 'disabled');
+    $('#list').attr('disabled', 'disabled');
+    $('#save').attr('disabled', 'disabled');
+    $('#headline').slideUp();
+    $('#namesbox').slideDown();
+
+    var count = 1;
+    count = 1;
+    $("div").remove("#result1");
+    names = $("#namesbox").val();
+
+    if (document.all) {
+        names = names.split("\n");
+    } else {
+        names = names.split("\n");
+    }
+
+    $("#values").show();
+    $(".name").show();
+    $("#popdown").hide();
+    $("div").remove(".name");
+    $("div").remove(".extra");
+    $("#playback").html("");
+    newtop = names.length * 200 * -1;
+    $('#values').css({top: +newtop});
+    names.sort(randOrd);
+
+    for (var i in names) {
+        if (names[i] == "" || typeof(names[i]) == undefined) {
+            count = count - 1;
+        } else {
+            name = names[i];
+            $('#values').append('<div id=result' + count + ' class=name>' + name + '</div>');
+        }
+        count = count + 1;
+    }
+
+    for (var i in names) {
+        if (names[i] == "" || typeof(names[i]) == undefined) {} else {
+            name = names[i];
+            $('#values').append('<div class=name>' + name + '</div>');
+        }
+        count = count + 1;
+    }
+
+    for (var i in names) {
+        if (names[i] == "" || typeof(names[i]) == undefined) {} else {
+            name = names[i];
+            $('#values').append('<div class=name>' + name + '</div>');
+        }
+        count = count + 1;
+    }
+
+    text = $('#result1').text();
+    $('#values').animate({top: '+176'}, 5000);
+
+    setTimeout(function() {
+        standout(text);
+        // Simpan daftar nama yang diperbarui ke localStorage setelah gatcha selesai
+        localStorage.setItem("names", JSON.stringify(names));
+    }, 5000);
+}
+
+    
+    function standout(text){
+        $('#result1').removeClass('name');
+        $('.name').animate({opacity: .25});
+        $('#result1').animate({height: '+=60px'});
+        $('#result1').append('<div class="extra"><a class="small alert button" href="#" onClick="removevictim();">Gakboleh dapat dua kali, hapus dari daftar undian!</a></div>');
+        $('#go').removeAttr('disabled','disabled');
+        $('#list').removeAttr('disabled','disabled');
+        $('#save').removeAttr('disabled','disabled');
+        $('#headline').text('Congratulations!');
+        $('#headline').slideDown();
+        let hadiah = prompt("Masukkan hadiah yang dimenangkan:");
+        if(hadiah) {
+            saveWinner(text, hadiah);
+        }
+    }
+    
+    function saveWinner(name, hadiah) {
+        let winners = JSON.parse(localStorage.getItem("winners")) || [];
+        if (winners.length < 10) {
+            winners.push({ name: name, hadiah: hadiah });
+        } else {
+            winners.shift();
+            winners.push({ name: name, hadiah: hadiah });
+        }
+        localStorage.setItem("winners", JSON.stringify(winners));
+    }
+    
+    function showWinners() {
+    let winners = JSON.parse(localStorage.getItem("winners")) || [];
+    let tableBody = document.querySelector("#winners-table tbody");
+    
+    // Kosongkan tabel sebelum menambahkan data baru
+    if (tableBody) {
+        tableBody.innerHTML = "";
+
+        // Tambahkan judul halaman
+        const headline = document.getElementById('headline');
+        if (headline) {
+            headline.textContent = 'Winner List!';
+            headline.style.display = 'block'; // Pastikan judul terlihat
+        }
+
+        // Tambahkan data pemenang ke tabel
+        winners.forEach(winner => {
+            let row = document.createElement("tr");
+            let nameCell = document.createElement("td");
+            nameCell.textContent = winner.name || "Nama Tidak Diketahui";
+            let hadiahCell = document.createElement("td");
+            hadiahCell.textContent = winner.hadiah || "Hadiah Tidak Diketahui";
+            row.appendChild(nameCell);
+            row.appendChild(hadiahCell);
+            tableBody.appendChild(row);
+        });
+
+        // Sembunyikan elemen halaman beranda dan elemen lainnya
+        const elementsToHide = ["homepage", "names", "values", "popdown"];
+        elementsToHide.forEach(id => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.style.display = "none";
+            }
+        });
+
+        // Tampilkan tabel pemenang
+        const winnersTableContainer = document.getElementById("winners-table-container");
+        if (winnersTableContainer) {
+            winnersTableContainer.style.display = "block";
+        }
+    } else {
+        console.error("Elemen tabel pemenang tidak ditemukan.");
+    }
+}
+
+
+
+
+function savePosition() {
+    var updatedNames = $("#namesbox").val().replace(/\n/g, '101');
+    localStorage.setItem('savedNames', updatedNames);
+}
+
+
+function clearData() {
+    localStorage.removeItem('savedNames');
+    $("#namesbox").val('');
+    $('#headline').text('Daftar nama telah dihapus!');
+}
+
+
+function removevictim(){
+      var nameupdated = "";
+      for (var i in names) {
+        name = names[i];
+        if (name == "" || name == text || typeof(name) == undefined) {} else {
+          nameupdated = nameupdated + "\n" + name;
+        }
+      }
+      $('#namesbox').val("");
+      $('#namesbox').val(nameupdated);
+      $('#result1').html("Dihapus");
+      $('#result1').fadeOut(1000, function(){
+        $("div").remove("#result1");
+      });
+      $("div").remove(".name");
+      $("div").remove(".extra");
+      $('#headline').text('Selamat! Yuk\'s kita lihat siapa berikutnya? Tekan "Gatcha!" untuk doorprize berikutnya.');
+    }
+    
+    // Load winners and names from local storage
+    $(document).ready(function(){
+      var savedWinners = localStorage.getItem('winners');
+      if (savedWinners) {
+        winners = JSON.parse(savedWinners);
+      }
+      
+      var savedNames = localStorage.getItem('names');
+      if (savedNames) {
+        $("#namesbox").val(savedNames.replace(/101/g, '\n').replace(/%20/g, ' '));
+      }
+    });
+
+
+    </script>
+    
+
+</body>
+</html>
